@@ -8,9 +8,6 @@ assess_performances <- function(ITE_actual, ITE_predicted){
   # Median Absolute Error
   MAE <- median(abs(ITE_actual - ITE_predicted))
   
-  # Mean Squared Error
-  MSE <- median((ITE_actual - ITE_predicted) ^ 2)
-  
   # Mean Bias
   MB <- mean(ITE_actual - ITE_predicted)
   
