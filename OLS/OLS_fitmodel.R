@@ -1,10 +1,10 @@
 # Ordinary Least Square Regression - Inverse Variance Multivariate meta-analysis
 
-OLS.fit <- function(y, X, t, newX){
+OLS.fit <- function(y, X, t, newX, second_stage){ # second stage can specify if the MVMA is at random or fixed effects so it can be either reml or fixed
     # y = list of outcomes
     # X = list of datasets with covariates
     # t = list of treatment
-    n.covariates <- nrow(X)
+    n.covariates <- ncol(X[[1]])
     nstudies <- length(y)
 
     coefficients_to_meta_analyze <- matrix(nrow = nstudies, ncol = n.covariates + 1)
@@ -20,8 +20,8 @@ OLS.fit <- function(y, X, t, newX){
 
     for(l in 1:nstudies){
         # Fit linear model
-        data_training <- cbind(X[[l]], t[[l]]); colnames(data_training) <- c(new_cov_names, "treatment")
-        mod <- lm(model_formula,  data = data_training)
+        data_lth_study <- cbind(X[[l]], t[[l]]); colnames(data_lth_study) <- c(new_cov_names, "treatment")
+        mod <- lm(model_formula,  data = data_lth_study)
 
         # Save the punctual estimates
         coefficients_to_meta_analyze[l, ] <- mod$coefficients[startsWith(names(mod$coefficients), 
@@ -35,7 +35,7 @@ OLS.fit <- function(y, X, t, newX){
         # Meta-analysis of the parameters: 
         meta_obj <- mvmeta::mvmeta(coefficients_to_meta_analyze,
                            vcov_parameters_to_meta_analyze, 
-                           method = "reml") 
+                           method = second_stage) 
 
         parameters_meta_analyzed <- coef(meta_obj)
 
