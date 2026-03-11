@@ -17,7 +17,6 @@ ridge_predict_ite <- function(model, # Model object
 }
 
 ridge_bootstrap_variance <- function(data_train, # Original training data
-                                     newX, # New covariates
                                      model_formula, # Model formula
                                      penalty_factors, # Penalty factors for the regression 
                                      lambda_seq, # Grid of lambda parameters
@@ -25,7 +24,7 @@ ridge_bootstrap_variance <- function(data_train, # Original training data
                                      x1_test,
                                      x0_test){
 
-  bootstrap_preds <- matrix(nrow = nrow(newX), ncol = N_boot)
+  bootstrap_preds <- matrix(nrow = nrow(x1_test), ncol = N_boot)
 
   for(m in 1:N_boot){
       bs_data <- get_bootstrap_sample(X = data_train)
@@ -72,7 +71,6 @@ ridge_get_variance_wrapper <- function(second_stage,
         return(function(data_train){
           ridge_bootstrap_variance(
             data_train = data_train,
-            newX = newX,
             model_formula = model_formula,
             penalty_factors = penalty_factors,
             lambda_seq = lambda_seq,
