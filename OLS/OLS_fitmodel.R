@@ -1,7 +1,7 @@
 # Ordinary Least Square Regression - Inverse Variance Multivariate meta-analysis
 
-OLS.fit <- function(data, newX, second_stage,
-                    covariate_names, outcome, treatment){ # can be either reml or fixed
+OLS_ipd_train <- function(data, second_stage, # can be either reml or fixed
+                    covariate_names, outcome, treatment){ 
     n.covariates <- ncol(X[[1]])
     nstudies <- length(y)
 
@@ -36,14 +36,15 @@ OLS.fit <- function(data, newX, second_stage,
 
         parameters_meta_analyzed <- coef(meta_obj)
 
-        # Predict ITE on new data
-        predictions <- cbind(1, newX) %*% parameters_meta_analyzed
+        class(parameters_meta_analyzed) <- "OLS_MVMA"
 
-  return(predictions)  
+  return(parameters_meta_analyzed)  
 }
 
 
-
+predict.OLS_MVMA <- function(obj.OLS, newX){
+    cbind(1, newX) %*% obj.OLS
+}
 
  
 
