@@ -98,10 +98,10 @@ get_ITE <- function(covariates_test_data, parameters_posterior_sample){
   return(to_return)
 }
 
-second_stage_ITE <- function(covariates_test_data, posterior_samples){
-  samps.mean <- matrix(ncol = nstudies, nrow = 3e3)
-  samps.sd <- matrix(ncol = nstudies, nrow = 3e3)
-  for(l in 1:nstudies){
+second_stage_ITE <- function(covariates_test_data, posterior_samples, nstudies){
+  samps.mean <- matrix(ncol = nrow(s.means), nrow = nrow(covariates_test_data))
+  samps.sd <- matrix(ncol = nrow(s.means), nrow = nrow(covariates_test_data))
+  for(l in 1:nrow(s.means)){
     z <- get_ITE(covariates_test_data = covariates_test_data,
                  parameters_posterior_sample = posterior_samples[[l]])
     samps.mean[, l] <- z$point_estimates
@@ -235,9 +235,9 @@ BayesLASSO.I_stage <- function(studies_data, n.covariates,
 
 second_stage_LASSO <- function(covariates_test_data, posterior_samples,
                                s.means, s.sds){
-  samps.mean <- matrix(ncol = nstudies, nrow = 3e3)
-  samps.sd <- matrix(ncol = nstudies, nrow = 3e3)
-  for(l in 1:nstudies){
+  samps.mean <- matrix(ncol = nrow(s.means), nrow = nrow(covariates_test_data))
+  samps.sd <- matrix(ncol = nrow(s.means), nrow = nrow(covariates_test_data))
+  for(l in 1:nrow(s.means)){
     covariates_test_data_std <- scale(covariates_test_data,
                                       center = s.means[l, -1],
                                       scale = s.sds[l, -1])
