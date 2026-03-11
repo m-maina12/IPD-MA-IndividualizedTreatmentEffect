@@ -2,6 +2,11 @@
 library(glmnet)
 library(matrixStats)
 
+lasso_build_design_matrix <- function(X, mod.formula){
+  return(model.matrix(mod.formula, data = X)[, -1])
+}
+
+
 lasso_predict_ite <- function(model, # Model object
                               x1_test,
                               x0_test){
@@ -39,9 +44,58 @@ lasso_bootstrap_variance <- function(data_train, # Original training data
   matrixStats::rowVars(bootstrap_preds)
 }
 
-lasso_build_design_matrix <- function(X, mod.formula){
-  return(model.matrix(mod.formula, data = X)[, -1])
+
+get_variance_wrapper <- function(second_stage, 
+                                 newX,
+                                 model_formula,
+                                 penalty_factors = NULL,
+                                 lambda_seq = NULL,
+                                 N_boot = 100){
+
+      second_stage <- toupper(second_stage)
+      
+      if(second_stage == "OLS+IV"){
+        # ritorna una funzione che prende solo data_train
+        return(function(data_train){
+          get_linear_model_variance(
+            data_train = data_train,
+            newX = newX,
+            model_formula = model_formula
+          )
+        })
+        
+      } else if(second_stage == "BS"){
+        # ritorna una funzione che prende solo data_train
+        return(function(data_train){
+          lasso_bootstrap_variance(
+            data_train = data_train,
+            newX = newX,
+            model_formula = model_formula,
+            penalty_factors = penalty_factors,
+            lambda_seq = lambda_seq,
+            N_boot = N_boot
+          )
+        })
+        
+      } else {
+        stop("second_stage must be either 'OLS+IV' or 'BS'")
+      }
+    } 
+
+
+LASSO_fit_model <- function(data, model_formula, lambda_seq, 
+                            penalty_factors){
+
+      x_train <- lasso_build_design_matrix(X = data, mod.formula = model_formula)
+      
+      # fit cv.glmnet su dataset originale
+      cv.obj <- cv.glmnet(x_train, y = data$y, nfolds = 10, alpha = 1,
+                            penalty.factor = penalty_factors, lambda = lambda_seq)
+
+      return(cv.obj)
+    
 }
+
 
 lasso_ipd_ite <- function(data, 
                           newX, 
@@ -94,60 +148,6 @@ lasso_ipd_ite <- function(data,
 
     return(pooled_predictions)
 }
-
-LASSO_fit_model <- function(data, model_formula, lambda_seq, 
-                            penalty_factors){
-
-      x_train <- lasso_build_design_matrix(X = data, mod.formula = model_formula)
-      
-      # fit cv.glmnet su dataset originale
-      cv.obj <- cv.glmnet(x_train, y = data$y, nfolds = 10, alpha = 1,
-                            penalty.factor = penalty_factors, lambda = lambda_seq)
-
-      return(cv.obj)
-    
-}
-
-
-get_variance_wrapper <- function(second_stage, 
-                                 newX,
-                                 model_formula,
-                                 penalty_factors = NULL,
-                                 lambda_seq = NULL,
-                                 N_boot = 100){
-
-      second_stage <- toupper(second_stage)
-      
-      if(second_stage == "OLS+IV"){
-        # ritorna una funzione che prende solo data_train
-        return(function(data_train){
-          get_linear_model_variance(
-            data_train = data_train,
-            newX = newX,
-            model_formula = model_formula
-          )
-        })
-        
-      } else if(second_stage == "BS"){
-        # ritorna una funzione che prende solo data_train
-        return(function(data_train){
-          lasso_bootstrap_variance(
-            data_train = data_train,
-            newX = newX,
-            model_formula = model_formula,
-            penalty_factors = penalty_factors,
-            lambda_seq = lambda_seq,
-            N_boot = N_boot
-          )
-        })
-        
-      } else {
-        stop("second_stage must be either 'OLS+IV' or 'BS'")
-      }
-    } 
-
-
-
 
 
 
