@@ -3,7 +3,7 @@
 # Function for Bayesian Methods
 
 BayesianLM <- function(studies_data, n.covariates,
-                       nstudies){
+                       nstudies, cov_names, outcome, treatment){
   Model.ITE <- "
     model{
       for(i in 1:n_patients){
@@ -38,12 +38,14 @@ BayesianLM <- function(studies_data, n.covariates,
   
   for(i in 1:nstudies){
     data_ith_study <- studies_data[[i]]
+    data_ith_study$y <- data_ith_study[[outcome]]
+    data_ith_study$treatment <- data_ith_study[[treatment]]
     
     BayesLASSO.spec <- textConnection(Model.ITE)
     
     input_data <- list(y = data_ith_study$y,
-                       x = as.matrix(select(data_ith_study, starts_with("x"))),
-                       x_int = as.matrix(select(data_ith_study, starts_with("x")) *
+                       x = as.matrix(data_ith_study[, cov_names]),
+                       x_int = as.matrix(data_ith_study[, cov_names]) *
                                            data_ith_study$treatment),
                        trt = data_ith_study$treatment, 
                        n_patients = nrow(data_ith_study),
